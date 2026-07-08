@@ -6,9 +6,9 @@ service -- no LLM calls to store/retrieve, local embeddings + a typed knowledge 
 
 Two agents:
 
-* **Shodh Memory Recall** (`pre\_generation`) -- before {{char}} replies, searches shodh
+* **Shodh Memory Recall** (`pre_generation`) -- before {{char}} replies, searches shodh
 for relevant memories and injects them into context. Runs every turn.
-* **Shodh Memory Writer** (`post\_processing`) -- stores new memories or reinforces
+* **Shodh Memory Writer** (`post_processing`) -- stores new memories or reinforces
 existing ones. Ships with `settings.runInterval: 5` and `settings.contextSize: 5`, so
 by default it only runs once every 5 user messages and reads the last 5 messages of
 history when deciding what to store (both are Marinara's own built-in agent-cadence
@@ -26,7 +26,7 @@ and Functions import UI. No source code, no rebuild, no registry regeneration.
 Marinara's webhook-type custom tools always POST `{ "tool": "<name>", "arguments": {...} }`
 with only a `Content-Type: application/json` header -- there's no way to add shodh's
 `X-API-Key` header or reshape the body to match shodh's expected
-`{user\_id, content, memory\_type}` / `{user\_id, query, limit}` fields purely through the
+`{user_id, content, memory_type}` / `{user_id, query, limit}` fields purely through the
 webhook config. The sandboxed "script" tool type was also checked and has no network
 access at all (bare Node `vm` context, no `fetch`).
 
@@ -48,18 +48,18 @@ key), then `shodh server` (defaults to `http://localhost:3030`).
 ```
    cd result/bridge
    cp .env.example .env
-   # edit .env: set SHODH\_API\_KEY to the key from `shodh init`
+   # edit .env: set SHODH_API_KEY to the key from `shodh init`
    node shodh-bridge.mjs
    ```
 
    Leave it running. It listens on `http://localhost:8135` by default and forwards to
-`SHODH\_BASE\_URL`. Set `SHODH\_BRIDGE\_DEBUG=true` in `.env` to log every outbound
+`SHODH_BASE_URL`. Set `SHODH_BRIDGE_DEBUG=true` in `.env` to log every outbound
 request to shodh (URL, body, and response status/timing or connection failure) --
 handy when diagnosing why memories aren't showing up.
 
 3. **Import the tools**: in Marinara, open the Presets panel -> Functions section ->
 "Import functions from ZIP or JSON" -> select `result/functions/marinara-functions.json`.
-This creates `shodh\_remember`, `shodh\_recall`, and `shodh\_reinforce`.
+This creates `shodh_remember`, `shodh_recall`, and `shodh_reinforce`.
 4. **Import the agents**: open the Agents panel -> "Import agents" -> select
 `result/agents/marinara-agents.json`. This creates "Shodh Memory Recall" and
 "Shodh Memory Writer".
@@ -78,7 +78,7 @@ default (`packages/server/src/services/tools/tool-executor.ts`). Since the bridg
 locally over plain HTTP, add this to **Marinara's own server `.env`** (not the bridge's):
 
 ```
-WEBHOOK\_LOCAL\_URLS\_ENABLED=true
+WEBHOOK_LOCAL_URLS_ENABLED=true
 ```
 
 This takes effect within \~2s, no server restart needed. Without it, calling any of the
@@ -86,7 +86,7 @@ three tools fails with `Refused to fetch http://...: protocol 'http' is not allo
 
 ## Character-as-user mapping
 
-shodh's `user\_id` = the AI character's id (a UUID), **not** the human. Each character
+shodh's `user_id` = the AI character's id (a UUID), **not** the human. Each character
 therefore accrues its own independent memory bank -- Character A and Character B never
 see each other's memories, even in the same chat.
 
@@ -95,7 +95,7 @@ The character id is **not decided by the LLM**. All three tools have
 every tool call (`buildCustomToolHiddenContext` in
 `packages/server/src/services/generation/tool-resolution-runtime.ts`) containing the
 current `characterId`/`characterName`, computed server-side from the actual chat state.
-The bridge reads `context.characterId` for `user\_id` and never asks the model to supply
+The bridge reads `context.characterId` for `user_id` and never asks the model to supply
 one -- the agent prompts don't even mention `characterId` as a tool argument. (A
 `characterId` argument is still accepted as a manual fallback, mainly so you can curl the
 bridge directly without going through Marinara at all.)
@@ -103,8 +103,8 @@ bridge directly without going through Marinara at all.)
 ## Reinforcement
 
 shodh-memory has no dedicated "strengthen" endpoint -- per its own docs, recalling a
-memory is what triggers its automatic Hebbian strengthening. So `shodh\_reinforce` is
+memory is what triggers its automatic Hebbian strengthening. So `shodh_reinforce` is
 implemented as a targeted recall against the existing fact's content. The writer agent's
-prompt tells it to call `shodh\_reinforce` (not `shodh\_remember`) when a fact is being
+prompt tells it to call `shodh_reinforce` (not `shodh_remember`) when a fact is being
 reaffirmed rather than learned for the first time, to avoid piling up duplicate memories.
 
