@@ -1,0 +1,102 @@
+{
+  "kind": "marinara.function-folder",
+  "version": 1,
+  "exportedAt": "2026-07-08T00:00:00.000Z",
+  "folderName": "Shodh Memory",
+  "functions": [
+    {
+      "path": "Shodh Memory/shodh_remember/manifest.json",
+      "manifest": {
+        "kind": "marinara.function",
+        "version": 1,
+        "config": {
+          "name": "shodh_remember",
+          "description": "Store a new long-term memory for the current character in shodh-memory. Automatically scoped to whichever character is currently speaking -- you never need to specify who it belongs to. Use only for genuinely new information -- if an existing memory is simply being reaffirmed, call shodh_reinforce instead.",
+          "parametersSchema": {
+            "type": "object",
+            "properties": {
+              "content": {
+                "type": "string",
+                "description": "Concise, third-person, self-contained statement of the fact or event to remember (e.g. \"The user's dog is named Biscuit and passed away in 2024.\")."
+              },
+              "memoryType": {
+                "type": "string",
+                "description": "One of: fact, preference, event, relationship, promise."
+              },
+              "tags": {
+                "type": "array",
+                "items": { "type": "string" },
+                "description": "A few short keyword tags for later retrieval."
+              }
+            },
+            "required": ["content"]
+          },
+          "executionType": "webhook",
+          "webhookUrl": "http://localhost:8135/webhook",
+          "staticResult": null,
+          "scriptBody": null,
+          "includeHiddenContext": true,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "path": "Shodh Memory/shodh_recall/manifest.json",
+      "manifest": {
+        "kind": "marinara.function",
+        "version": 1,
+        "config": {
+          "name": "shodh_recall",
+          "description": "Search shodh-memory for the current character's long-term memories relevant to a query. Automatically scoped to whichever character is currently speaking -- you never need to specify whose memories to search.",
+          "parametersSchema": {
+            "type": "object",
+            "properties": {
+              "query": {
+                "type": "string",
+                "description": "Short keyword query describing what's currently relevant (topic, person mentioned, open question, etc.). Ten words maximum -- keywords, not a full sentence."
+              },
+              "limit": {
+                "type": "number",
+                "description": "Max number of memories to return (default 5)."
+              }
+            },
+            "required": ["query"]
+          },
+          "executionType": "webhook",
+          "webhookUrl": "http://localhost:8135/webhook",
+          "staticResult": null,
+          "scriptBody": null,
+          "includeHiddenContext": true,
+          "enabled": true
+        }
+      }
+    },
+    {
+      "path": "Shodh Memory/shodh_reinforce/manifest.json",
+      "manifest": {
+        "kind": "marinara.function",
+        "version": 1,
+        "config": {
+          "name": "shodh_reinforce",
+          "description": "Strengthen an existing shodh-memory memory for the current character instead of storing a duplicate. Automatically scoped to whichever character is currently speaking. Use when the character notices a previously stored fact is being reaffirmed rather than learning something new.",
+          "parametersSchema": {
+            "type": "object",
+            "properties": {
+              "content": {
+                "type": "string",
+                "description": "The existing memory/fact being reaffirmed, phrased the same way it would have originally been stored."
+              }
+            },
+            "required": ["content"]
+          },
+          "executionType": "webhook",
+          "webhookUrl": "http://localhost:8135/webhook",
+          "staticResult": null,
+          "scriptBody": null,
+          "includeHiddenContext": true,
+          "enabled": true
+        }
+      }
+    }
+  ]
+}

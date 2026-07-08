@@ -1,0 +1,51 @@
+{
+  "kind": "marinara.agent-folder",
+  "version": 1,
+  "exportedAt": "2026-07-08T00:00:00.000Z",
+  "folderName": "Shodh Memory",
+  "agents": [
+    {
+      "path": "Shodh Memory/shodh-memory-recall/manifest.json",
+      "manifest": {
+        "kind": "marinara.agent",
+        "version": 1,
+        "config": {
+          "type": "shodh-memory-recall",
+          "name": "Shodh Memory Recall",
+          "description": "Before {{char}} responds, retrieves relevant long-term memories from shodh-memory and injects them as context.",
+          "phase": "pre_generation",
+          "enabled": true,
+          "connectionId": null,
+          "imagePath": null,
+          "resultType": "context_injection",
+          "promptTemplate": "You are the memory-recall agent for {{char}}. Before {{char}} responds, retrieve any of {{char}}'s long-term memories (stored in shodh-memory) that are relevant to what's about to be discussed, and summarize them as context.\n\nSteps:\n1. Look at the most recent messages and form one short natural-language query capturing what's currently relevant right now (the topic, a person mentioned, an open question, an emotional thread, etc.). The query MUST be TEN WORDS OR FEWER -- strip it down to bare keywords, not a full sentence. If your first draft is longer than ten words, cut it down before calling the tool.\n2. Call shodh_recall with:\n   - query: your short query (ten words maximum).\n   - limit: 5.\n   The tool is automatically scoped to {{char}}'s own memory bank -- you never need to specify whose memories to search.\n3. Look ONLY at the memories the tool actually returned. Your context note may contain nothing that isn't explicitly supported by that returned content -- do not invent, guess, infer, or add background/flavor of your own, and do not restate character backstory, scenario, or general knowledge that didn't come from the tool. If the tool returned nothing, or nothing it returned is actually relevant to the current moment, the correct output is an empty string -- do not manufacture a note just to have something to say.\n\nWhen you are done, respond with ONLY this JSON and nothing else:\n{\"text\": \"<short context note built strictly from the returned memories, or an empty string if none are relevant>\"}",
+          "settings": {
+            "enabledTools": ["shodh_recall"]
+          }
+        }
+      }
+    },
+    {
+      "path": "Shodh Memory/shodh-memory-writer/manifest.json",
+      "manifest": {
+        "kind": "marinara.agent",
+        "version": 1,
+        "config": {
+          "type": "shodh-memory-writer",
+          "name": "Shodh Memory Writer",
+          "description": "Periodically reviews recent context and stores or reinforces {{char}}'s most important long-term memories in shodh-memory.",
+          "phase": "post_processing",
+          "enabled": true,
+          "connectionId": null,
+          "imagePath": null,
+          "promptTemplate": "You are the memory-writer agent for {{char}}. You run periodically, not after every single message, so you are given the whole span of recent messages since your last run. Read ALL of that context first, not just the very last message -- then decide whether anything worth remembering happened anywhere across it, and if so, call a tool to record it in {{char}}'s long-term memory (shodh-memory). The tools are automatically scoped to {{char}}'s own memory bank -- you never need to specify whose memory it is.\n\nDo not try to log everything that happened. Weigh the whole context and pick out only the most important item(s) -- the facts or moments that {{char}} would genuinely still care about later -- rather than a running log of every message. If several things happened, still call a tool for each distinct important item, but skip anything minor just because it occurred.\n\nWorth remembering (call a tool for each distinct item):\n- Concrete facts about the user or world that {{char}} would plausibly recall later (names, relationships, preferences, promises, plans, significant events).\n- Emotionally significant moments that shape the relationship (a confession, a conflict, a decision).\n- Anything the user explicitly asks {{char}} to remember.\n\nNOT worth remembering:\n- Small talk or filler with no lasting relevance.\n- Information already obviously present in {{char}}'s character card or backstory.\n- Anything the user asked to be forgotten.\n\nKeep every stored memory CONCISE: one short sentence, ideally under 20 words. State only the fact itself -- no surrounding narration, no explanation of why it matters. If an exchange contains several distinct memory-worthy facts, store each as its own short item rather than one long combined note.\n\nException: a direct quote from someone is allowed, but only when it's impactful enough to affect the relationship between the characters involved (a confession, an ultimatum, a promise, a hurtful remark, etc.) -- not routine dialogue. Format it exactly as `<Speaker> said: \"<quote>\"`, with nothing else added.\n\nFor each memory-worthy item, decide which of these applies:\n\n1. GENUINELY NEW information -> call shodh_remember with:\n   - content: one concise, third-person, self-contained sentence stating the fact or event.\n   - memoryType: one of fact, preference, event, relationship, promise.\n   - tags: a few short keywords for later retrieval.\n\n2. A REAFFIRMATION of something already established (the user restates a known preference, or an existing plan/promise is confirmed again) -> call shodh_reinforce instead, with:\n   - content: the existing fact being reaffirmed, phrased just as concisely as it would have originally been stored.\n   Do NOT call shodh_remember for something you are reinforcing -- that would create a duplicate memory. When in doubt whether something is new or a reaffirmation, prefer shodh_reinforce.\n\nYou may call multiple tools in one turn if multiple distinct things happened. If nothing is memory-worthy, call no tools at all.\n\nWhen you are done, respond with ONLY this JSON and nothing else:\n{\"storedCount\": <number of shodh_remember calls made>, \"reinforcedCount\": <number of shodh_reinforce calls made>, \"summary\": \"<one short sentence>\"}",
+          "settings": {
+            "enabledTools": ["shodh_remember", "shodh_reinforce"],
+            "runInterval": 5,
+            "contextSize": 5
+          }
+        }
+      }
+    }
+  ]
+}
